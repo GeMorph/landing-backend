@@ -70,5 +70,4 @@ const handler = async (event, context) => {
   return serverlessHandler(event, context);
 };
 
-initialize();
 module.exports = { handler };
