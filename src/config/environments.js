@@ -1,5 +1,4 @@
-import "dotenv/config";
-import { getSecret } from "../utils/getSecret";
+const getSecret = require("../utils/getSecrets");
 
 // For local development, ensure a .env file exists with the required environment variables.
 let DB_CONN_STRING = process.env.DB_CONN_STRING || "";
@@ -13,7 +12,7 @@ const fetchSecrets = async () => {
 };
 
 // Initialize the secrets and then export the config
-export const initConfig = async () => {
+const initConfig = async () => {
   if (ENVIRONMENT != "local") 
     await fetchSecrets();
 
@@ -23,3 +22,5 @@ export const initConfig = async () => {
     ENVIRONMENT: ENVIRONMENT,
   };
 };
+
+module.exports = initConfig;

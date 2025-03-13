@@ -35,9 +35,6 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build application
-        run: npm run build
-
       - name: Create .env file
         run: |
           echo "DB_CONN_STRING=mongodb://localhost:27017" > .env
@@ -105,4 +102,4 @@ jobs:
 
       - name: Deploy Lambda to Preview
         run: |
-          aws lambda update-function-code --function-name parhlai-backend-${{ env.ENVIRONMENT_NAME }} --zip-file fileb://backend-lambda.zip
+          aws lambda update-function-code --function-name gemorph-backend-${{ env.ENVIRONMENT_NAME }} --zip-file fileb://backend-lambda.zip

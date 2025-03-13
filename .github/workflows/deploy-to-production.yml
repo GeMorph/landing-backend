@@ -33,4 +33,4 @@ jobs:
 
       - name: Deploy Lambda to Production
         run: |
-          aws lambda update-function-code --function-name parhlai-backend-${{ env.ENVIRONMENT_NAME }} --zip-file fileb://backend-lambda.zip
+          aws lambda update-function-code --function-name gemorph-backend-${{ env.ENVIRONMENT_NAME }} --zip-file fileb://backend-lambda.zip
