@@ -1,0 +1,119 @@
+name: Build and Deploy Preview
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+env:
+  ENVIRONMENT_NAME: preview
+
+jobs:
+  BuildAndTest:
+    if: github.event_name == 'pull_request'
+    name: Build and Test Backend
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Start MongoDB
+        uses: supercharge/mongodb-github-action@1.11.0
+        with:
+          mongodb-version: "8.0"
+
+      - name: Install newman (Postman)
+        run: npm install -g newman
+
+      - name: Install dependencies
+        run: npm install -omit=dev
+
+      - name: Remove dev dependencies
+        run: npm prune --production 
+
+      - name: Build application
+        run: |
+          npm build
+
+      - name: Create .env file
+        run: |
+          echo "DB_CONN_STRING=mongodb://localhost:27017" > .env
+          echo "PORT=3001" >> .env
+          echo "BREVO_API_KEY=${{ secrets.PREVIEW_BREVO_API_KEY }}" >> .env
+          echo "ENVIRONMENT=local" >> .env
+          echo "FIREBASE_SERVICE_ACCOUNT_JSON=$(echo '${{ secrets.PREVIEW_FIREBASE_SERVICE_ACCOUNT_JSON }}' | base64 --decode)" >> .env
+
+      - name: Start backend and run tests
+        run: |
+          yarn dev:local &
+          sleep 15
+          yarn test:ci-cd
+
+  BuildLambda:
+    name: Build Lambda
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.PREVIEW_AWS_ACCESS_KEY }}
+          aws-secret-access-key: ${{ secrets.PREVIEW_AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+          cache: "yarn"
+
+      - name: Install dependencies
+        run: yarn install
+
+      - name: Build Lambda
+        run: yarn build
+
+      - name: Remove dev dependencies
+        run: yarn workspaces focus --production
+
+      - name: Zip Lambda
+        run: zip -r -9 backend-lambda.zip . -x "src/*" ".vscode/*" ".github/*" ".vscode/*" "yarn.lock"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-lambda
+          path: backend-lambda.zip
+          if-no-files-found: error
+          retention-days: 2
+          overwrite: true
+          compression-level: 9
+
+  DeployLambdaPreview:
+    name: Deploy Lambda to Preview
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    needs: BuildLambda
+    steps:
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.PREVIEW_AWS_ACCESS_KEY }}
+          aws-secret-access-key: ${{ secrets.PREVIEW_AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: backend-lambda
+
+      - name: Deploy Lambda to Preview
+        run: |
+          aws lambda update-function-code --function-name parhlai-backend-${{ env.ENVIRONMENT_NAME }} --zip-file fileb://backend-lambda.zip
