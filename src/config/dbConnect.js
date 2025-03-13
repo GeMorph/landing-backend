@@ -1,12 +1,16 @@
-const {default: mongoose} = require('mongoose');
+const { default: mongoose } = require('mongoose');
+const { logger } = require('../utils/logger'); 
 
-const dbConnect = async() => {
-    try{
-        await mongoose.connect(process.env.DB_CONNECT);
-        console.log("Connected to the Database Successfully");
-    } 
-    catch(error){
-        console.log("Couldnt connect to the database");
+const dbConnect = async () => {
+    try {
+        await mongoose.connect(process.env.DB_CONNECT, {
+            useNewUrlParser: true,
+            useUnifiedTopology: true,
+        });
+        logger.info("Connected to the Database Successfully");
+    } catch (error) {
+        logger.error("Couldn't connect to the database", { error: error.message });
     }
 };
+
 module.exports = dbConnect;

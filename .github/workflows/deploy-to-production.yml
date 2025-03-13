@@ -1,0 +1,36 @@
+name: Build and Deploy Production
+on:
+  workflow_dispatch:
+
+env:
+  ENVIRONMENT_NAME: production
+
+jobs:
+  PackageAndDeployLambda:
+    name: Package and Deploy Lambda
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.PRODUCTION_AWS_ACCESS_KEY }}
+          aws-secret-access-key: ${{ secrets.PRODUCTION_AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+          cache: "npm"
+
+      - name: Install dependencies (Production Only)
+        run: npm ci --omit=dev
+
+      - name: Zip Lambda package
+        run: zip -r backend-lambda.zip . -x ".vscode/*" ".github/*" ".git/*" "node_modules/.cache/*"
+
+      - name: Deploy Lambda to Production
+        run: |
+          aws lambda update-function-code --function-name parhlai-backend-${{ env.ENVIRONMENT_NAME }} --zip-file fileb://backend-lambda.zip

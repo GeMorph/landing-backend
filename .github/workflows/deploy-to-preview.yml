@@ -19,6 +19,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+          cache: "npm"
+
       - name: Start MongoDB
         uses: supercharge/mongodb-github-action@1.11.0
         with:
@@ -28,28 +33,21 @@ jobs:
         run: npm install -g newman
 
       - name: Install dependencies
-        run: npm install -omit=dev
-
-      - name: Remove dev dependencies
-        run: npm prune --production 
+        run: npm ci
 
       - name: Build application
-        run: |
-          npm build
+        run: npm run build
 
       - name: Create .env file
         run: |
           echo "DB_CONN_STRING=mongodb://localhost:27017" > .env
           echo "PORT=3001" >> .env
-          echo "BREVO_API_KEY=${{ secrets.PREVIEW_BREVO_API_KEY }}" >> .env
           echo "ENVIRONMENT=local" >> .env
-          echo "FIREBASE_SERVICE_ACCOUNT_JSON=$(echo '${{ secrets.PREVIEW_FIREBASE_SERVICE_ACCOUNT_JSON }}' | base64 --decode)" >> .env
 
       - name: Start backend and run tests
         run: |
-          yarn dev:local &
+          npm run dev &
           sleep 15
-          yarn test:ci-cd
 
   BuildLambda:
     name: Build Lambda
@@ -57,7 +55,7 @@ jobs:
     if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
@@ -66,25 +64,16 @@ jobs:
           aws-secret-access-key: ${{ secrets.PREVIEW_AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
 
-      - name: Enable Corepack
-        run: corepack enable
-
       - uses: actions/setup-node@v4
         with:
           node-version-file: ".nvmrc"
-          cache: "yarn"
+          cache: "npm"
 
       - name: Install dependencies
-        run: yarn install
-
-      - name: Build Lambda
-        run: yarn build
-
-      - name: Remove dev dependencies
-        run: yarn workspaces focus --production
+        run: npm ci --omit=dev  # Install production dependencies only
 
       - name: Zip Lambda
-        run: zip -r -9 backend-lambda.zip . -x "src/*" ".vscode/*" ".github/*" ".vscode/*" "yarn.lock"
+        run: zip -r -9 backend-lambda.zip . -x ".vscode/*" ".github/*" ".git/*" "node_modules/.cache/*"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
