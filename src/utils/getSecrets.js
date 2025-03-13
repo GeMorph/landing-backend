@@ -1,5 +1,5 @@
 const { SSMClient, GetParameterCommand } = require("@aws-sdk/client-ssm");
-const { logger } = require("../utils/logger"); 
+const { logger } = require("../utils/logger");
 
 const ssmClient = new SSMClient({ region: "us-east-1" });
 

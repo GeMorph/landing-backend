@@ -6,7 +6,7 @@ const morgan = require("morgan");
 const serverless = require("serverless-http");
 const dbConnect = require("./config/dbConnect");
 const { loadConfig } = require("./config/config");
-const caseRoute = require('./routes/caseRoute');
+const caseRoute = require("./routes/caseRoute");
 
 // Load environment variables early
 dotenv.config();
@@ -18,7 +18,9 @@ const app = express();
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: true }));
 morgan.token("host", (req) => req.headers.host || "");
-app.use(morgan(":method :host :status :res[content-length] - :response-time ms"));
+app.use(
+  morgan(":method :host :status :res[content-length] - :response-time ms"),
+);
 app.use(helmet());
 app.use(helmet.crossOriginResourcePolicy({ policy: "same-origin" }));
 
