@@ -4,9 +4,9 @@ const dotenv = require("dotenv");
 const { logger } = require("./utils/logger");
 const morgan = require("morgan");
 const serverless = require("serverless-http");
-const { dbConnect } = require("./config/dbConnect");
+const dbConnect = require("./config/dbConnect");
 const { loadConfig } = require("./config/config");
-const { submitCase } = require("./controllers/caseCtrl");
+const caseRoute = require('./routes/caseRoute');
 
 // Load environment variables early
 dotenv.config();
@@ -61,7 +61,7 @@ const initialize = async () => {
 };
 
 // Load application routes
-app.use("/api/case", submitCase);
+app.use("/api/case", caseRoute);
 
 // Modify the handler
 const handler = async (event, context) => {
@@ -70,4 +70,5 @@ const handler = async (event, context) => {
   return serverlessHandler(event, context);
 };
 
+initialize();
 module.exports = { handler };
