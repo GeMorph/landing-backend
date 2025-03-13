@@ -16,6 +16,7 @@ const initConfig = async () => {
   if (ENVIRONMENT != "local") 
     await fetchSecrets();
 
+  console.log("DB_CONN_STRING: ", DB_CONN_STRING);
   return {
     port: PORT,
     DB_CONN_STRING: DB_CONN_STRING,
