@@ -1,0 +1,178 @@
+{
+  "info": {
+    "_postman_id": "977aae19-d374-4832-bf38-bf90f781a135",
+    "name": "GeMorph",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "43090555"
+  },
+  "item": [
+    {
+      "name": "Check without Auth",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Response validation based on URL\", function () {",
+              "    // Retrieve the environment variable 'URL'",
+              "    const currentURL = pm.environment.get(\"URL\");",
+              "    ",
+              "    // Check if the URL is not equal to \"127.0.0.1:3001\"",
+              "    if (currentURL !== \"127.0.0.1:3001\") {",
+              "        // Validate that the response body includes \"Forbidden\"",
+              "        pm.expect(pm.response.text()).to.include(\"Forbidden\");",
+              "    } else {",
+              "        // Validate that the response body includes \"Health OK! Server is running\"",
+              "        pm.expect(pm.response.text()).to.include(\"Health OK! Server is running\");",
+              "    }",
+              "});",
+              ""
+            ],
+            "type": "text/javascript",
+            "packages": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{URL}}/api/",
+          "host": ["{{URL}}"],
+          "path": ["api", ""]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Check with Auth",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Response validation based on URL\", function () {",
+              "    // Retrieve the environment variable 'URL'",
+              "    const currentURL = pm.environment.get(\"URL\");",
+              "    ",
+              "    // Check if the URL is not equal to \"127.0.0.1:3001\"",
+              "    if (currentURL !== \"127.0.0.1:3001\") {",
+              "        // Validate that the response body includes \"Forbidden\"",
+              "        pm.expect(pm.response.text()).to.include(\"Health OK! Server is running\");",
+              "    }",
+              "});",
+              ""
+            ],
+            "type": "text/javascript",
+            "packages": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "awsv4",
+          "awsv4": [
+            {
+              "key": "region",
+              "value": "us-east-1",
+              "type": "string"
+            },
+            {
+              "key": "service",
+              "value": "lambda",
+              "type": "string"
+            },
+            {
+              "key": "secretKey",
+              "value": "bO6FNXOkuEoy1jniS/r+BY4FijLeWsnpQdKGN9mH",
+              "type": "string"
+            },
+            {
+              "key": "accessKey",
+              "value": "AKIASDRANEC7JZLXOQRW",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{URL}}/api/",
+          "host": ["{{URL}}"],
+          "path": ["api", ""]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Case Submission",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Response status is 201 or body contains success message\", function () { ",
+              "    const responseText = pm.response.text();",
+              "    const statusCode = pm.response.code;",
+              "",
+              "    pm.expect(statusCode === 201 || responseText.includes(\"Case submitted successfully\"))",
+              "      .to.be.true;",
+              "});",
+              "",
+              ""
+            ],
+            "type": "text/javascript",
+            "packages": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "awsv4",
+          "awsv4": [
+            {
+              "key": "region",
+              "value": "us-east-1",
+              "type": "string"
+            },
+            {
+              "key": "service",
+              "value": "lambda",
+              "type": "string"
+            },
+            {
+              "key": "secretKey",
+              "value": "bO6FNXOkuEoy1jniS/r+BY4FijLeWsnpQdKGN9mH",
+              "type": "string"
+            },
+            {
+              "key": "accessKey",
+              "value": "AKIASDRANEC7JZLXOQRW",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"type\":\"Criminal Investigation\",\n    \"description\":\"Case\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{URL}}/api/case/submit",
+          "host": ["{{URL}}"],
+          "path": ["api", "case", "submit"]
+        }
+      },
+      "response": []
+    }
+  ]
+}
