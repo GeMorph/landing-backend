@@ -6,6 +6,7 @@ const dbConnect = async () => {
   try {
     const config = getConfig();
     await mongoose.connect(config.DB_CONN_STRING, {
+      dbName: config.ENVIRONMENT,
       useNewUrlParser: true,
       useUnifiedTopology: true,
     });
