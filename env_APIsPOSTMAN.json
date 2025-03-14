@@ -1,0 +1,15 @@
+{
+  "id": "60f03327-f114-4f58-ad62-0363c1a15d3e",
+  "name": "Preview",
+  "values": [
+    {
+      "key": "URL",
+      "value": "https://6umdmacywqctc4zx6ot3pcgu7e0nkkdt.lambda-url.us-east-1.on.aws",
+      "type": "default",
+      "enabled": true
+    }
+  ],
+  "_postman_variable_scope": "environment",
+  "_postman_exported_at": "2025-03-14T05:15:59.608Z",
+  "_postman_exported_using": "Postman/11.36.4-250313-2335"
+}

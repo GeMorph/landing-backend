@@ -45,6 +45,7 @@ jobs:
         run: |
           npm run dev &
           sleep 15
+          npm run test:ci-cd
 
   BuildLambda:
     name: Build Lambda
