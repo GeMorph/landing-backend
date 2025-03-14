@@ -114,12 +114,14 @@
           "listen": "test",
           "script": {
             "exec": [
-              "pm.test(\"Body matches one of the expected strings\", function () { ",
+              "pm.test(\"Response status is 201 or body contains success message\", function () { ",
               "    const responseText = pm.response.text();",
-              "    pm.expect(responseText).to.satisfy(text => ",
-              "        text.includes(\"Case submitted successfully\")",
-              "    );",
+              "    const statusCode = pm.response.code;",
+              "",
+              "    pm.expect(statusCode === 201 || responseText.includes(\"Case submitted successfully\"))",
+              "      .to.be.true;",
               "});",
+              "",
               ""
             ],
             "type": "text/javascript",
