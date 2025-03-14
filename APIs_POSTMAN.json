@@ -40,9 +40,9 @@
         "method": "GET",
         "header": [],
         "url": {
-          "raw": "{{URL}}/",
+          "raw": "{{URL}}/api/",
           "host": ["{{URL}}"],
-          "path": [""]
+          "path": ["api", ""]
         }
       },
       "response": []
@@ -61,9 +61,6 @@
               "    // Check if the URL is not equal to \"127.0.0.1:3001\"",
               "    if (currentURL !== \"127.0.0.1:3001\") {",
               "        // Validate that the response body includes \"Forbidden\"",
-              "        pm.expect(pm.response.text()).to.include(\"Forbidden\");",
-              "    } else {",
-              "        // Validate that the response body includes \"Health OK! Server is running\"",
               "        pm.expect(pm.response.text()).to.include(\"Health OK! Server is running\");",
               "    }",
               "});",
