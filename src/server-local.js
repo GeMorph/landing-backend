@@ -8,6 +8,7 @@ const morgan = require("morgan");
 const caseRoute = require("./routes/caseRoute");
 const { logger } = require("./utils/logger");
 const { loadConfig } = require("./config/config");
+const userRoute = require("./routes/userRoute");
 
 dotenv.config();
 
@@ -26,6 +27,7 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 
 app.use("/api/case", caseRoute);
+app.use("/api/user", userRoute);
 // Health check endpoint
 app.get("/api/", async (req, res) => {
   try {

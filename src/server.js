@@ -7,6 +7,7 @@ const serverless = require("serverless-http");
 const dbConnect = require("./config/dbConnect");
 const { loadConfig } = require("./config/config");
 const caseRoute = require("./routes/caseRoute");
+const userRoute = require("./routes/userRoute");
 
 // Load environment variables early
 dotenv.config();
@@ -64,6 +65,7 @@ const initialize = async () => {
 
 // Load application routes
 app.use("/api/case", caseRoute);
+app.use("/api/user", userRoute);
 
 // Modify the handler
 const handler = async (event, context) => {

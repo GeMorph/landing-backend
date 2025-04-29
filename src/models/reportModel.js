@@ -21,11 +21,6 @@ const ReportSchema = new Schema(
       type: Schema.Types.ObjectId,
       ref: "Case",
     },
-    status: {
-      type: String,
-      enum: ["pending", "reviewing", "resolved", "dismissed"],
-      default: "pending",
-    },
     type: {
       type: String,
       enum: ["abuse", "bug", "other"],
