@@ -1,28 +1,58 @@
-const mongoose = require("mongoose"); // Erase if already required
+const mongoose = require("mongoose");
+const { Schema } = mongoose;
 
-// Declare the Schema of the Mongo model
-var caseSchema = new mongoose.Schema(
+const CaseSchema = new Schema(
   {
-    type: {
+    title: {
       type: String,
-      default: "Criminal Investigation",
-      enum: [
-        "Criminal Investigation",
-        "Missing Person",
-        "Unidentified Person",
-        "Catastrophe Victim",
-        "Other",
-      ],
+      required: true,
+      trim: true,
     },
     description: {
       type: String,
       required: true,
     },
+    status: {
+      type: String,
+      enum: ["open", "in-progress", "closed", "resolved"],
+      default: "open",
+    },
+    createdBy: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    assignedTo: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+    },
+    priority: {
+      type: String,
+      enum: ["low", "medium", "high", "critical"],
+      default: "medium",
+    },
+    tags: [
+      {
+        type: String,
+      },
+    ],
+    history: [
+      {
+        message: String,
+        timestamp: {
+          type: Date,
+          default: Date.now,
+        },
+        updatedBy: {
+          type: Schema.Types.ObjectId,
+          ref: "User",
+        },
+      },
+    ],
   },
   {
     timestamps: true,
   },
 );
 
-//Export the model
-module.exports = mongoose.model("Case", caseSchema);
+module.exports = mongoose.model("Case", CaseSchema);
