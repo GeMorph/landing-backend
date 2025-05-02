@@ -70,7 +70,7 @@ app.use((req, res, next) => {
 // Apply other security middleware after CORS
 app.use(
   helmet({
-    crossOriginResourcePolicy: { policy: "cross-origin" },
+    crossOriginResourcePolicy: { policy: "same-origin" },
     crossOriginOpenerPolicy: { policy: "unsafe-none" },
   }),
 );
