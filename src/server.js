@@ -20,13 +20,14 @@ const app = express();
 const corsOptions = {
   origin: [
     "http://gemorph-frontend-s3-bucket.s3-website-us-east-1.amazonaws.com",
-    "http://localhost:5173", // For local development
-    "http://localhost:3000", // For local development
+    "https://gemorph-frontend-s3-bucket.s3-website-us-east-1.amazonaws.com",
+    "http://localhost:5173",
+    "http://localhost:3000",
   ],
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "X-Firebase-Token", "Authorization"],
   credentials: true,
-  maxAge: 86400, // 24 hours
+  maxAge: 86400,
 };
 
 // Middleware setup
@@ -40,19 +41,27 @@ app.use(
 // Apply CORS before other middleware
 app.use((req, res, next) => {
   const origin = req.headers.origin;
+
+  // Log CORS request details
+  logger.info(`CORS request from origin: ${origin}`);
+
   if (corsOptions.origin.includes(origin)) {
     res.setHeader("Access-Control-Allow-Origin", origin);
+    res.setHeader(
+      "Access-Control-Allow-Methods",
+      corsOptions.methods.join(","),
+    );
+    res.setHeader(
+      "Access-Control-Allow-Headers",
+      corsOptions.allowedHeaders.join(","),
+    );
+    res.setHeader("Access-Control-Allow-Credentials", "true");
+    res.setHeader("Access-Control-Max-Age", corsOptions.maxAge);
   }
-  res.setHeader("Access-Control-Allow-Methods", corsOptions.methods.join(","));
-  res.setHeader(
-    "Access-Control-Allow-Headers",
-    corsOptions.allowedHeaders.join(","),
-  );
-  res.setHeader("Access-Control-Allow-Credentials", "true");
-  res.setHeader("Access-Control-Max-Age", corsOptions.maxAge);
 
   // Handle preflight requests
   if (req.method === "OPTIONS") {
+    logger.info("Handling OPTIONS preflight request");
     return res.status(200).end();
   }
   next();
@@ -94,14 +103,14 @@ const initialize = async () => {
       logger.info("Initializing server...");
       await loadConfig();
       await dbConnect();
-      await initializeFirebase(); // Initialize Firebase
+      await initializeFirebase();
       logger.info("Server initialized successfully.");
       isInitialized = true;
     }
   } catch (error) {
     logger.error(`Error during server initialization: ${error.message}`);
     console.error("Error during server initialization:", error);
-    process.exit(1); // Terminate if initialization fails
+    throw error;
   }
 };
 
@@ -124,19 +133,35 @@ app.use((err, req, res, next) => {
 // Modify the handler
 const handler = async (event, context) => {
   try {
-    if (!isInitialized) await initialize(); // Ensure initialization happens only once
+    if (!isInitialized) await initialize();
 
     // Log the incoming event for debugging
     logger.info("Incoming Lambda event:", JSON.stringify(event, null, 2));
 
     const serverlessHandler = serverless(app, {
       request: {
-        // Ensure headers are properly passed
         headers: event.headers || {},
       },
     });
 
     const result = await serverlessHandler(event, context);
+
+    // Ensure CORS headers are present in the response
+    if (!result.headers) {
+      result.headers = {};
+    }
+
+    // Add CORS headers to the response
+    const origin = event.headers?.origin;
+    if (origin && corsOptions.origin.includes(origin)) {
+      result.headers["Access-Control-Allow-Origin"] = origin;
+      result.headers["Access-Control-Allow-Methods"] =
+        corsOptions.methods.join(",");
+      result.headers["Access-Control-Allow-Headers"] =
+        corsOptions.allowedHeaders.join(",");
+      result.headers["Access-Control-Allow-Credentials"] = "true";
+      result.headers["Access-Control-Max-Age"] = corsOptions.maxAge;
+    }
 
     // Log the response for debugging
     logger.info("Lambda response:", JSON.stringify(result, null, 2));
