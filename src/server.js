@@ -123,9 +123,43 @@ app.use((err, req, res, next) => {
 
 // Modify the handler
 const handler = async (event, context) => {
-  if (!isInitialized) await initialize(); // Ensure initialization happens only once
-  const serverlessHandler = serverless(app); // Generate the serverless handler
-  return serverlessHandler(event, context);
+  try {
+    if (!isInitialized) await initialize(); // Ensure initialization happens only once
+
+    // Log the incoming event for debugging
+    logger.info("Incoming Lambda event:", JSON.stringify(event, null, 2));
+
+    const serverlessHandler = serverless(app, {
+      request: {
+        // Ensure headers are properly passed
+        headers: event.headers || {},
+      },
+    });
+
+    const result = await serverlessHandler(event, context);
+
+    // Log the response for debugging
+    logger.info("Lambda response:", JSON.stringify(result, null, 2));
+
+    return result;
+  } catch (error) {
+    logger.error("Lambda handler error:", error);
+    return {
+      statusCode: 500,
+      body: JSON.stringify({
+        status: 500,
+        success: false,
+        message: "Internal server error",
+        error:
+          process.env.NODE_ENV === "development" ? error.message : undefined,
+      }),
+      headers: {
+        "Content-Type": "application/json",
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Credentials": true,
+      },
+    };
+  }
 };
 
 module.exports = { handler };
