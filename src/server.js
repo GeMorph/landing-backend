@@ -16,6 +16,19 @@ dotenv.config();
 // Initialize the app
 const app = express();
 
+// CORS configuration
+const corsOptions = {
+  origin: [
+    "http://gemorph-frontend-s3-bucket.s3-website-us-east-1.amazonaws.com",
+    "http://localhost:5173", // For local development
+    "http://localhost:3000", // For local development
+  ],
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "X-Firebase-Token", "Authorization"],
+  credentials: true,
+  maxAge: 86400, // 24 hours
+};
+
 // Middleware setup
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: true }));
@@ -23,8 +36,35 @@ morgan.token("host", (req) => req.headers.host || "");
 app.use(
   morgan(":method :host :status :res[content-length] - :response-time ms"),
 );
-app.use(helmet());
-app.use(helmet.crossOriginResourcePolicy({ policy: "same-origin" }));
+
+// Apply CORS before other middleware
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  if (corsOptions.origin.includes(origin)) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+  }
+  res.setHeader("Access-Control-Allow-Methods", corsOptions.methods.join(","));
+  res.setHeader(
+    "Access-Control-Allow-Headers",
+    corsOptions.allowedHeaders.join(","),
+  );
+  res.setHeader("Access-Control-Allow-Credentials", "true");
+  res.setHeader("Access-Control-Max-Age", corsOptions.maxAge);
+
+  // Handle preflight requests
+  if (req.method === "OPTIONS") {
+    return res.status(200).end();
+  }
+  next();
+});
+
+// Apply other security middleware after CORS
+app.use(
+  helmet({
+    crossOriginResourcePolicy: { policy: "cross-origin" },
+    crossOriginOpenerPolicy: { policy: "unsafe-none" },
+  }),
+);
 
 // Health check endpoint
 app.get("/api/", async (req, res) => {
@@ -68,6 +108,18 @@ const initialize = async () => {
 // Load application routes
 app.use("/api/case", caseRoute);
 app.use("/api/user", userRoute);
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+  logger.error(`Unhandled error: ${err.message}`);
+  res.status(500).json({
+    status: 500,
+    success: false,
+    message: "Internal server error",
+    error: process.env.NODE_ENV === "development" ? err.message : undefined,
+  });
+  next(err);
+});
 
 // Modify the handler
 const handler = async (event, context) => {
