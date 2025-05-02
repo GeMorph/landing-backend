@@ -92,9 +92,24 @@ const initialize = async () => {
   try {
     if (!isInitialized) {
       logger.info("Initializing server...");
-      await loadConfig();
+
+      // First load config and fetch secrets
+      logger.info("Loading configuration and fetching secrets...");
+      const config = await loadConfig();
+
+      // Set environment variables from config
+      process.env.FIREBASE_PROJECT_ID = config.FIREBASE_PROJECT_ID;
+      process.env.FIREBASE_CLIENT_EMAIL = config.FIREBASE_CLIENT_EMAIL;
+      process.env.FIREBASE_PRIVATE_KEY = config.FIREBASE_PRIVATE_KEY;
+
+      // Then connect to database
+      logger.info("Connecting to database...");
       await dbConnect();
-      await initializeFirebase(); // Initialize Firebase
+
+      // Finally initialize Firebase after secrets are loaded
+      logger.info("Initializing Firebase...");
+      await initializeFirebase();
+
       logger.info("Server initialized successfully.");
       isInitialized = true;
     }
