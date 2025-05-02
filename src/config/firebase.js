@@ -1,15 +1,17 @@
 const admin = require("firebase-admin");
 const { logger } = require("../utils/logger");
 require("dotenv").config();
+const { getConfig } = require("../config/config");
 
 // Initialize Firebase Admin
-const initializeFirebase = () => {
+const initializeFirebase = async () => {
   try {
+    const config = getConfig();
     // Check if Firebase is already initialized
     if (!admin.apps.length) {
-      const projectId = process.env.FIREBASE_PROJECT_ID;
-      const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
-      const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(
+      const projectId = config.FIREBASE_PROJECT_ID;
+      const clientEmail = config.FIREBASE_CLIENT_EMAIL;
+      const privateKey = config.FIREBASE_PRIVATE_KEY?.replace(
         /\\n/g,
         "\n",
       );
