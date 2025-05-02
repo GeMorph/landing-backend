@@ -4,7 +4,7 @@ const { logger } = require("../utils/logger");
 // Create a new user
 const createUser = async (req, res) => {
   try {
-    const { email, name, firstName, lastName } = req.body;
+    const { email, firstName, lastName } = req.body;
     const firebase_id = req.user.uid; // Get Firebase UID from the verified token
 
     if (!email) {
@@ -29,7 +29,7 @@ const createUser = async (req, res) => {
     // Create user in our database
     const newUser = new User({
       firebase_id,
-      name: name || `${firstName} ${lastName}`.trim() || email.split("@")[0],
+      name: [firstName.trim(), lastName.trim()].filter(Boolean).join(" "),
       email,
     });
 
