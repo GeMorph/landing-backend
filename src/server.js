@@ -16,20 +16,6 @@ dotenv.config();
 // Initialize the app
 const app = express();
 
-// CORS configuration
-const corsOptions = {
-  origin: [
-    "http://gemorph-frontend-s3-bucket.s3-website-us-east-1.amazonaws.com",
-    "https://gemorph-frontend-s3-bucket.s3-website-us-east-1.amazonaws.com",
-    "http://localhost:5173",
-    "http://localhost:3000",
-  ],
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "X-Firebase-Token", "Authorization"],
-  credentials: true,
-  maxAge: 86400,
-};
-
 // Middleware setup
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: true }));
@@ -38,39 +24,10 @@ app.use(
   morgan(":method :host :status :res[content-length] - :response-time ms"),
 );
 
-// Apply CORS before other middleware
-app.use((req, res, next) => {
-  const origin = req.headers.origin;
-
-  // Log CORS request details
-  logger.info(`CORS request from origin: ${origin}`);
-
-  if (corsOptions.origin.includes(origin)) {
-    res.setHeader("Access-Control-Allow-Origin", origin);
-    res.setHeader(
-      "Access-Control-Allow-Methods",
-      corsOptions.methods.join(","),
-    );
-    res.setHeader(
-      "Access-Control-Allow-Headers",
-      corsOptions.allowedHeaders.join(","),
-    );
-    res.setHeader("Access-Control-Allow-Credentials", "true");
-    res.setHeader("Access-Control-Max-Age", corsOptions.maxAge);
-  }
-
-  // Handle preflight requests
-  if (req.method === "OPTIONS") {
-    logger.info("Handling OPTIONS preflight request");
-    return res.status(200).end();
-  }
-  next();
-});
-
-// Apply other security middleware after CORS
+// Apply security middleware
 app.use(
   helmet({
-    crossOriginResourcePolicy: { policy: "same-origin" },
+    crossOriginResourcePolicy: { policy: "cross-origin" },
     crossOriginOpenerPolicy: { policy: "unsafe-none" },
   }),
 );
@@ -146,23 +103,6 @@ const handler = async (event, context) => {
 
     const result = await serverlessHandler(event, context);
 
-    // Ensure CORS headers are present in the response
-    if (!result.headers) {
-      result.headers = {};
-    }
-
-    // Add CORS headers to the response
-    const origin = event.headers?.origin;
-    if (origin && corsOptions.origin.includes(origin)) {
-      result.headers["Access-Control-Allow-Origin"] = origin;
-      result.headers["Access-Control-Allow-Methods"] =
-        corsOptions.methods.join(",");
-      result.headers["Access-Control-Allow-Headers"] =
-        corsOptions.allowedHeaders.join(",");
-      result.headers["Access-Control-Allow-Credentials"] = "true";
-      result.headers["Access-Control-Max-Age"] = corsOptions.maxAge;
-    }
-
     // Log the response for debugging
     logger.info("Lambda response:", JSON.stringify(result, null, 2));
 
@@ -180,8 +120,6 @@ const handler = async (event, context) => {
       }),
       headers: {
         "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Credentials": true,
       },
     };
   }
