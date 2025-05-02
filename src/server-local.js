@@ -1,8 +1,8 @@
 const express = require("express");
+const helmet = require("helmet");
 const cors = require("cors");
 const dotenv = require("dotenv");
 const dbConnect = require("./config/dbConnect");
-const bodyParser = require("body-parser");
 const cookieParser = require("cookie-parser");
 const morgan = require("morgan");
 const caseRoute = require("./routes/caseRoute");
@@ -11,31 +11,26 @@ const { loadConfig } = require("./config/config");
 const { initializeFirebase } = require("./config/firebase");
 const userRoute = require("./routes/userRoute");
 
+// Load environment variables early
 dotenv.config();
 
-const initialize = async () => {
-  try {
-    await loadConfig();
-    await dbConnect();
-    await initializeFirebase();
-    logger.info("Server initialized successfully");
-  } catch (error) {
-    logger.error(`Error during server initialization: ${error.message}`);
-    process.exit(1);
-  }
-};
+let isInitialized = false;
 
-const PORT = process.env.PORT || 4000;
-
+// Initialize the app
 const app = express();
-app.use(cors());
-app.use(morgan("dev"));
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(cookieParser());
 
-app.use("/api/case", caseRoute);
-app.use("/api/user", userRoute);
+// Middleware setup
+app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ extended: true }));
+app.use(cors()); // Keep CORS for local development
+app.use(cookieParser());
+morgan.token("host", (req) => req.headers.host || "");
+app.use(
+  morgan(":method :host :status :res[content-length] - :response-time ms"),
+);
+app.use(helmet());
+app.use(helmet.crossOriginResourcePolicy({ policy: "same-origin" }));
+
 // Health check endpoint
 app.get("/api/", async (req, res) => {
   try {
@@ -55,6 +50,27 @@ app.get("/api/", async (req, res) => {
   }
 });
 
+// Initialization function
+const initialize = async () => {
+  try {
+    if (!isInitialized) {
+      logger.info("Initializing server...");
+      await loadConfig();
+      await dbConnect();
+      await initializeFirebase();
+      logger.info("Server initialized successfully.");
+      isInitialized = true;
+    }
+  } catch (error) {
+    logger.error(`Error during server initialization: ${error.message}`);
+    process.exit(1);
+  }
+};
+
+// Load application routes
+app.use("/api/case", caseRoute);
+app.use("/api/user", userRoute);
+
 // Error handling middleware
 app.use((err, req, res, next) => {
   logger.error(`Unhandled error: ${err.message}`);
@@ -67,8 +83,10 @@ app.use((err, req, res, next) => {
   next(err);
 });
 
+const PORT = process.env.PORT || 4000;
+
+// Start the server
 app.listen(PORT, () => {
   logger.info(`Server is running on port ${PORT}`);
+  initialize(); // Initialize after server starts
 });
-
-initialize();
