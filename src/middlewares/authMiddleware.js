@@ -1,6 +1,6 @@
 const admin = require("firebase-admin");
 const { getConfig } = require("../config/config");
-const { logger } = require("../libs/logger");
+const { logger } = require("../utils/logger");
 
 const initFirebase = async () => {
   try {
@@ -19,15 +19,31 @@ const validateToken = async (req, res, next) => {
   try {
     if (!admin.apps.length) await initFirebase();
 
-    const idToken = Array.isArray(req.headers["firebase-token"])
-      ? req.headers["firebase-token"][0]
-      : req.headers["firebase-token"];
+    // Log all headers for debugging
+    logger.info("Request headers:", req.headers);
+
+    // Get token from headers (case-insensitive)
+    const idToken =
+      req.headers["x-firebase-token"] ||
+      req.headers["X-Firebase-Token"] ||
+      req.headers["firebase-token"];
+
+    logger.info(
+      "Extracted token:",
+      idToken ? "Token present" : "No token found",
+    );
 
     if (!idToken) {
-      return res.status(400).json({ message: "ID token is required" });
+      return res.status(400).json({
+        status: 400,
+        success: false,
+        message: "Firebase token is required",
+      });
     }
 
     const decodedToken = await admin.auth().verifyIdToken(idToken);
+    logger.info("Token decoded successfully for UID:", decodedToken.uid);
+
     req.user = decodedToken;
 
     if (req.params.id && req.user?.uid !== req.params.id) {
@@ -53,7 +69,11 @@ const validateToken = async (req, res, next) => {
     next();
   } catch (error) {
     logger.error("Error verifying ID token in middleware:", error);
-    return res.status(403).json({ message: "Invalid or expired token" });
+    return res.status(403).json({
+      status: 403,
+      success: false,
+      message: "Invalid or expired token",
+    });
   }
 };
 

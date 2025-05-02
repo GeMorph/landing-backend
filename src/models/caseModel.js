@@ -1,12 +1,10 @@
 const mongoose = require("mongoose");
-const { Schema } = mongoose;
 
-const CaseSchema = new Schema(
+const caseSchema = new mongoose.Schema(
   {
     title: {
       type: String,
       required: true,
-      trim: true,
     },
     description: {
       type: String,
@@ -14,38 +12,40 @@ const CaseSchema = new Schema(
     },
     status: {
       type: String,
-      enum: ["open", "in-progress", "closed", "resolved"],
+      enum: ["open", "in_progress", "closed", "rejected"],
       default: "open",
-    },
-    createdBy: {
-      type: Schema.Types.ObjectId,
-      ref: "User",
       required: true,
     },
     assignedTo: {
-      type: Schema.Types.ObjectId,
+      type: mongoose.Schema.Types.ObjectId,
       ref: "User",
+    },
+    createdBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
     },
     priority: {
       type: String,
-      enum: ["low", "medium", "high", "critical"],
+      enum: ["low", "medium", "high", "urgent"],
       default: "medium",
+      required: true,
     },
-    tags: [
+    attachments: [
       {
-        type: String,
+        type: String, // URLs to files
       },
     ],
-    history: [
+    comments: [
       {
-        message: String,
-        timestamp: {
+        text: String,
+        user: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "User",
+        },
+        createdAt: {
           type: Date,
           default: Date.now,
-        },
-        updatedBy: {
-          type: Schema.Types.ObjectId,
-          ref: "User",
         },
       },
     ],
@@ -55,4 +55,6 @@ const CaseSchema = new Schema(
   },
 );
 
-module.exports = mongoose.model("Case", CaseSchema);
+const Case = mongoose.model("Case", caseSchema);
+
+module.exports = Case;

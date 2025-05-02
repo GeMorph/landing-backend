@@ -8,13 +8,21 @@ const morgan = require("morgan");
 const caseRoute = require("./routes/caseRoute");
 const { logger } = require("./utils/logger");
 const { loadConfig } = require("./config/config");
+const { initializeFirebase } = require("./config/firebase");
 const userRoute = require("./routes/userRoute");
 
 dotenv.config();
 
 const initialize = async () => {
-  await loadConfig();
-  await dbConnect();
+  try {
+    await loadConfig();
+    await dbConnect();
+    await initializeFirebase();
+    logger.info("Server initialized successfully");
+  } catch (error) {
+    logger.error(`Error during server initialization: ${error.message}`);
+    process.exit(1);
+  }
 };
 
 const PORT = process.env.PORT || 4000;
@@ -45,6 +53,18 @@ app.get("/api/", async (req, res) => {
       error: { code: 500, message: err.message },
     });
   }
+});
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+  logger.error(`Unhandled error: ${err.message}`);
+  res.status(500).json({
+    status: 500,
+    success: false,
+    message: "Internal server error",
+    error: process.env.NODE_ENV === "development" ? err.message : undefined,
+  });
+  next(err);
 });
 
 app.listen(PORT, () => {

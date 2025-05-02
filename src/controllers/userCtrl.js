@@ -1,14 +1,11 @@
-const admin = require("firebase-admin");
-const User = require("../models/User"); // Adjust path if needed
-const { logger } = require("../libs/logger");
+const User = require("../models/userModel");
+const { logger } = require("../utils/logger");
 
 // Create a new user
 const createUser = async (req, res) => {
   try {
-    const userRecord = await admin.auth().getUser(req.user.uid);
-
-    const name = userRecord.displayName || "";
-    const email = userRecord.email;
+    const { email, name, firstName, lastName } = req.body;
+    const firebase_id = req.user.uid; // Get Firebase UID from the verified token
 
     if (!email) {
       return res.status(400).json({
@@ -18,6 +15,7 @@ const createUser = async (req, res) => {
       });
     }
 
+    // Check if user already exists in our database
     const existingUser = await User.findOne({ email });
 
     if (existingUser) {
@@ -28,9 +26,10 @@ const createUser = async (req, res) => {
       });
     }
 
+    // Create user in our database
     const newUser = new User({
-      firebase_id: req.user.uid,
-      name,
+      firebase_id,
+      name: name || `${firstName} ${lastName}`.trim() || email.split("@")[0],
       email,
     });
 
@@ -56,13 +55,14 @@ const createUser = async (req, res) => {
 // Get a single user by Firebase UID
 const getSingleUser = async (req, res) => {
   try {
-    const user = await User.findOne({ firebase_id: req.params.id })
+    // The user's Firebase UID is available in req.user.uid from the auth middleware
+    const user = await User.findOne({ firebase_id: req.user.uid })
       .populate("cases")
       .populate("reports");
 
     if (!user) {
       logger.info(
-        `USER -> GET SINGLE USER (PARAM ID: ${req.params.id}) = User not found.`,
+        `USER -> GET SINGLE USER (UID: ${req.user.uid}) = User not found.`,
       );
       return res.status(404).json({
         status: 404,
@@ -72,7 +72,7 @@ const getSingleUser = async (req, res) => {
     }
 
     logger.info(
-      `USER -> GET SINGLE USER (PARAM ID: ${req.params.id}) = User fetched successfully.`,
+      `USER -> GET SINGLE USER (UID: ${req.user.uid}) = User fetched successfully.`,
     );
     return res.status(200).json({
       status: 200,
@@ -82,7 +82,7 @@ const getSingleUser = async (req, res) => {
   } catch (error) {
     const errorMessage = error.message || "Internal server error";
     logger.error(
-      `USER -> GET SINGLE USER (PARAM ID: ${req.params.id}) = Error: ${errorMessage}`,
+      `USER -> GET SINGLE USER (UID: ${req.user.uid}) = Error: ${errorMessage}`,
     );
     return res.status(500).json({
       status: 500,
@@ -92,4 +92,4 @@ const getSingleUser = async (req, res) => {
   }
 };
 
-module.exports = {getSingleUser, createUser};
+module.exports = { getSingleUser, createUser };

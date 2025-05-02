@@ -6,6 +6,7 @@ const morgan = require("morgan");
 const serverless = require("serverless-http");
 const dbConnect = require("./config/dbConnect");
 const { loadConfig } = require("./config/config");
+const { initializeFirebase } = require("./config/firebase");
 const caseRoute = require("./routes/caseRoute");
 const userRoute = require("./routes/userRoute");
 
@@ -53,6 +54,7 @@ const initialize = async () => {
       logger.info("Initializing server...");
       await loadConfig();
       await dbConnect();
+      await initializeFirebase(); // Initialize Firebase
       logger.info("Server initialized successfully.");
       isInitialized = true;
     }
