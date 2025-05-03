@@ -92,4 +92,47 @@ const getSingleUser = async (req, res) => {
   }
 };
 
-module.exports = { getSingleUser, createUser };
+// Get user by email
+const getUserByEmail = async (req, res) => {
+  try {
+    const { email } = req.params;
+
+    if (!email) {
+      return res.status(400).json({
+        status: 400,
+        success: false,
+        message: "Email is required.",
+      });
+    }
+
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      logger.info(`USER -> GET USER BY EMAIL (${email}) = User not found.`);
+      return res.status(404).json({
+        status: 404,
+        success: false,
+        message: "User not found.",
+      });
+    }
+
+    logger.info(
+      `USER -> GET USER BY EMAIL (${email}) = User fetched successfully.`,
+    );
+    return res.status(200).json({
+      status: 200,
+      success: true,
+      data: user,
+    });
+  } catch (error) {
+    const errorMessage = error.message || "Internal server error";
+    logger.error(`USER -> GET USER BY EMAIL = Error: ${errorMessage}`);
+    return res.status(500).json({
+      status: 500,
+      success: false,
+      message: errorMessage,
+    });
+  }
+};
+
+module.exports = { getSingleUser, createUser, getUserByEmail };
