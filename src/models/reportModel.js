@@ -10,10 +10,16 @@ const reportSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    type: {
+      type: String,
+      enum: ["analysis", "feedback", "summary"],
+      default: "analysis",
+      required: true,
+    },
     status: {
       type: String,
-      enum: ["pending", "in_progress", "completed", "rejected"],
-      default: "pending",
+      enum: ["draft", "published"],
+      default: "draft",
       required: true,
     },
     user: {
@@ -43,6 +49,9 @@ const reportSchema = new mongoose.Schema(
         },
       },
     ],
+    publishedAt: {
+      type: Date,
+    },
   },
   {
     timestamps: true,

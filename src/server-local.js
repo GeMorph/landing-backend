@@ -10,6 +10,7 @@ const { logger } = require("./utils/logger");
 const { loadConfig } = require("./config/config");
 const { initializeFirebase } = require("./config/firebase");
 const userRoute = require("./routes/userRoute");
+const reportRoute = require("./routes/reportRoute");
 
 // Load environment variables early
 dotenv.config();
@@ -70,6 +71,7 @@ const initialize = async () => {
 // Load application routes
 app.use("/api/case", caseRoute);
 app.use("/api/user", userRoute);
+app.use("/api/reports", reportRoute);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
