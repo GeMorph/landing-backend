@@ -6,7 +6,8 @@ const getCases = asyncHandler(async (req, res) => {
   try {
     const cases = await Case.find()
       .sort({ createdAt: -1 })
-      .populate("createdBy", "name email");
+      .populate("user", "name email")
+      .populate("assignedTo", "name email");
 
     res.status(200).json({
       success: true,
@@ -14,12 +15,13 @@ const getCases = asyncHandler(async (req, res) => {
         id: caseItem._id,
         title: caseItem.title,
         description: caseItem.description,
-        status: caseItem.status,
         priority: caseItem.priority,
+        status: caseItem.status,
         createdAt: caseItem.createdAt,
-        createdBy: caseItem.createdBy,
+        tags: caseItem.tags,
+        dnaFile: caseItem.dnaFile,
         assignedTo: caseItem.assignedTo,
-        attachments: caseItem.attachments,
+        dueDate: caseItem.dueDate,
       })),
     });
   } catch (error) {
@@ -71,29 +73,32 @@ const getCaseById = asyncHandler(async (req, res) => {
 });
 
 // Create a new case
-const submitCase = asyncHandler(async (req, res) => {
+const createCase = asyncHandler(async (req, res) => {
   try {
-    const newCase = await Case.create(req.body);
+    const { title, description, priority, status, tags, dueDate, dnaFile } =
+      req.body;
+
+    const newCase = await Case.create({
+      title,
+      description,
+      priority,
+      status,
+      tags,
+      dueDate,
+      dnaFile,
+      user: req.user._id,
+    });
+
     res.status(201).json({
       success: true,
-      status: 201,
-      message: "Case submitted successfully",
+      message: "Case created successfully",
       data: newCase,
     });
   } catch (error) {
-    console.error("Error submitting case:", error);
-
-    if (error.name === "ValidationError") {
-      return res.status(400).json({
-        success: false,
-        message: "Validation error",
-        errors: error.errors,
-      });
-    }
-
+    console.error("Error creating case:", error);
     res.status(500).json({
       success: false,
-      message: "Internal Server Error",
+      message: "Failed to create case",
       error: error.message,
     });
   }
@@ -102,9 +107,22 @@ const submitCase = asyncHandler(async (req, res) => {
 // Update a case
 const updateCase = asyncHandler(async (req, res) => {
   try {
-    const caseItem = await Case.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-    }).populate("createdBy", "name email");
+    const { title, description, priority, status, tags, dueDate, dnaFile } =
+      req.body;
+
+    const caseItem = await Case.findByIdAndUpdate(
+      req.params.id,
+      {
+        title,
+        description,
+        priority,
+        status,
+        tags,
+        dueDate,
+        dnaFile,
+      },
+      { new: true },
+    );
 
     if (!caseItem) {
       return res.status(404).json({
@@ -116,17 +134,7 @@ const updateCase = asyncHandler(async (req, res) => {
     res.status(200).json({
       success: true,
       message: "Case updated successfully",
-      data: {
-        id: caseItem._id,
-        title: caseItem.title,
-        description: caseItem.description,
-        status: caseItem.status,
-        priority: caseItem.priority,
-        createdAt: caseItem.createdAt,
-        createdBy: caseItem.createdBy,
-        assignedTo: caseItem.assignedTo,
-        attachments: caseItem.attachments,
-      },
+      data: caseItem,
     });
   } catch (error) {
     console.error("Error updating case:", error);
@@ -167,7 +175,7 @@ const deleteCase = asyncHandler(async (req, res) => {
 module.exports = {
   getCases,
   getCaseById,
-  submitCase,
+  createCase,
   updateCase,
   deleteCase,
 };

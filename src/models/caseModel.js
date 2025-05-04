@@ -10,33 +10,42 @@ const caseSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    status: {
-      type: String,
-      enum: ["open", "in_progress", "closed", "rejected"],
-      default: "open",
-      required: true,
-    },
-    assignedTo: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-    },
-    createdBy: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
-    },
     priority: {
       type: String,
       enum: ["low", "medium", "high", "urgent"],
       default: "medium",
       required: true,
     },
-    attachments: [
+    status: {
+      type: String,
+      enum: ["open", "in_progress", "resolved", "closed"],
+      default: "open",
+      required: true,
+    },
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    dnaFile: {
+      url: String,
+      name: String,
+      size: Number,
+      type: String,
+    },
+    tags: [
       {
-        type: String, // URLs to files
+        type: String,
       },
     ],
-    comments: [
+    assignedTo: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
+    dueDate: {
+      type: Date,
+    },
+    notes: [
       {
         text: String,
         user: {
