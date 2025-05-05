@@ -1,5 +1,6 @@
 const Report = require("../models/reportModel");
 const asyncHandler = require("express-async-handler");
+const Counter = require("../models/counterModel");
 
 // Get all reports
 const getReports = asyncHandler(async (req, res) => {
@@ -17,6 +18,7 @@ const getReports = asyncHandler(async (req, res) => {
         type: report.type || "analysis",
         status: report.status,
         created_at: report.createdAt,
+        caseNumber: report.caseNumber,
         user: {
           name: report.user.name,
           email: report.user.email,
@@ -35,12 +37,24 @@ const getReports = asyncHandler(async (req, res) => {
 
 const createReport = asyncHandler(async (req, res) => {
   try {
+    // Get the next report number
+    const counter = await Counter.findOneAndUpdate(
+      { name: "reportNumber" },
+      { $inc: { seq: 1 } },
+      { new: true, upsert: true },
+    );
+
     const reportData = {
       ...req.body,
-      user: req.user._id,
+      user: req.body.user,
+      createdBy: req.user._id,
+      caseNumber: counter.seq,
     };
 
     const newReport = await Report.create(reportData);
+    await require("../models/userModel").findByIdAndUpdate(req.body.user, {
+      $push: { reports: newReport._id },
+    });
     res.status(201).json({
       success: true,
       message: "Report created successfully",
@@ -111,9 +125,48 @@ const deleteReport = asyncHandler(async (req, res) => {
   }
 });
 
+const getReportById = asyncHandler(async (req, res) => {
+  try {
+    const report = await Report.findById(req.params.id).populate(
+      "user",
+      "name email",
+    );
+    if (!report) {
+      return res.status(404).json({
+        success: false,
+        message: "Report not found",
+      });
+    }
+    res.status(200).json({
+      success: true,
+      data: {
+        id: report._id,
+        title: report.title,
+        description: report.description,
+        type: report.type,
+        status: report.status,
+        created_at: report.createdAt,
+        user: {
+          name: report.user.name,
+          email: report.user.email,
+        },
+        caseNumber: report.caseNumber,
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching report by id:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch report",
+      error: error.message,
+    });
+  }
+});
+
 module.exports = {
   getReports,
   createReport,
   updateReport,
   deleteReport,
+  getReportById,
 };

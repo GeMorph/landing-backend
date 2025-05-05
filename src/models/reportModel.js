@@ -32,6 +32,11 @@ const reportSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
+    createdBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
     case: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Case",

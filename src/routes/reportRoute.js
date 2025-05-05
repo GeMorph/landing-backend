@@ -5,8 +5,12 @@ const {
   createReport,
   updateReport,
   deleteReport,
+  getReportById,
 } = require("../controllers/reportCtrl");
-const { validateToken, validateAdmin } = require("../middlewares/authMiddleware");
+const {
+  validateToken,
+  validateAdmin,
+} = require("../middlewares/authMiddleware");
 
 // Get all reports
 router.get("/", validateToken, getReports);
@@ -19,5 +23,8 @@ router.put("/:id", validateToken, validateAdmin, updateReport);
 
 // Delete a report
 router.delete("/:id", validateToken, validateAdmin, deleteReport);
+
+// Get report by ID
+router.get("/:id", validateToken, getReportById);
 
 module.exports = router;

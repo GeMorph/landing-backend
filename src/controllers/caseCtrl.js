@@ -107,6 +107,10 @@ const createCase = asyncHandler(async (req, res) => {
       caseNumber: counter.seq,
     });
 
+    await require("../models/userModel").findByIdAndUpdate(req.user._id, {
+      $push: { cases: newCase._id },
+    });
+
     res.status(201).json({
       success: true,
       message: "Case created successfully",
