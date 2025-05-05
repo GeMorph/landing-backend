@@ -1,5 +1,6 @@
 const Case = require("../models/caseModel");
 const asyncHandler = require("express-async-handler");
+const Counter = require("../models/counterModel");
 
 // Get all cases
 const getCases = asyncHandler(async (req, res) => {
@@ -29,6 +30,7 @@ const getCases = asyncHandler(async (req, res) => {
         assignedTo: caseItem.assignedTo,
         dueDate: caseItem.dueDate,
         user: caseItem.user,
+        caseNumber: caseItem.caseNumber,
       })),
     });
   } catch (error) {
@@ -67,6 +69,7 @@ const getCaseById = asyncHandler(async (req, res) => {
         createdBy: caseItem.createdBy,
         assignedTo: caseItem.assignedTo,
         attachments: caseItem.attachments,
+        caseNumber: caseItem.caseNumber,
       },
     });
   } catch (error) {
@@ -85,6 +88,13 @@ const createCase = asyncHandler(async (req, res) => {
     const { title, description, priority, status, tags, dueDate, dnaFile } =
       req.body;
 
+    // Get the next case number
+    const counter = await Counter.findOneAndUpdate(
+      { name: "caseNumber" },
+      { $inc: { seq: 1 } },
+      { new: true, upsert: true },
+    );
+
     const newCase = await Case.create({
       title,
       description,
@@ -94,6 +104,7 @@ const createCase = asyncHandler(async (req, res) => {
       dueDate,
       dnaFile,
       user: req.user._id,
+      caseNumber: counter.seq,
     });
 
     res.status(201).json({
@@ -202,6 +213,7 @@ const getCasesByUserId = asyncHandler(async (req, res) => {
         dnaFile: caseItem.dnaFile,
         assignedTo: caseItem.assignedTo,
         dueDate: caseItem.dueDate,
+        caseNumber: caseItem.caseNumber,
       })),
     });
   } catch (error) {

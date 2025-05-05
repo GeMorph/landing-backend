@@ -58,6 +58,11 @@ const caseSchema = new mongoose.Schema(
         },
       },
     ],
+    caseNumber: {
+      type: Number,
+      required: true,
+      unique: true,
+    },
   },
   {
     timestamps: true,

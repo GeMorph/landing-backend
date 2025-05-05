@@ -6,6 +6,11 @@ const reportSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    caseNumber: {
+      type: Number,
+      required: true,
+      unique: true,
+    },
     description: {
       type: String,
       required: true,
