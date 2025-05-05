@@ -31,10 +31,14 @@ const getReports = asyncHandler(async (req, res) => {
   }
 });
 
-// Create a new report
 const createReport = asyncHandler(async (req, res) => {
   try {
-    const newReport = await Report.create(req.body);
+    const reportData = {
+      ...req.body,
+      user: req.user._id,
+    };
+
+    const newReport = await Report.create(reportData);
     res.status(201).json({
       success: true,
       message: "Report created successfully",
