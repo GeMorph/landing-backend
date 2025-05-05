@@ -10,15 +10,17 @@ const getReports = asyncHandler(async (req, res) => {
 
     res.status(200).json({
       success: true,
-      data: reports.map((report) => ({
+      reports: reports.map((report) => ({
         id: report._id,
         title: report.title,
         description: report.description,
         type: report.type || "analysis",
         status: report.status,
-        createdAt: report.createdAt,
-        publishedAt:
-          report.status === "completed" ? report.updatedAt : undefined,
+        created_at: report.createdAt,
+        user: {
+          name: report.user.name,
+          email: report.user.email,
+        },
       })),
     });
   } catch (error) {

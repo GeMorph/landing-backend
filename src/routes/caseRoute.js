@@ -6,11 +6,15 @@ const {
   createCase,
   updateCase,
   deleteCase,
+  getCasesByUserId,
 } = require("../controllers/caseCtrl");
 const { validateToken } = require("../middlewares/authMiddleware");
 
 // Get all cases
 router.get("/", validateToken, getCases);
+
+// Get cases by user ID
+router.get("/user/:userId", validateToken, getCasesByUserId);
 
 // Get single case
 router.get("/:id", validateToken, getCaseById);

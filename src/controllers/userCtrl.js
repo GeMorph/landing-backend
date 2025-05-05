@@ -53,16 +53,16 @@ const createUser = async (req, res) => {
 };
 
 // Get a single user by Firebase UID
-const getSingleUser = async (req, res) => {
+const getUser = async (req, res) => {
   try {
-    // The user's Firebase UID is available in req.user.uid from the auth middleware
-    const user = await User.findOne({ firebase_id: req.user.uid })
+    // The user object is already set by the middleware
+    const user = await User.findOne({ _id: req.user._id })
       .populate("cases")
       .populate("reports");
 
     if (!user) {
       logger.info(
-        `USER -> GET SINGLE USER (UID: ${req.user.uid}) = User not found.`,
+        `USER -> GET SINGLE USER (ID: ${req.user._id}) = User not found.`,
       );
       return res.status(404).json({
         status: 404,
@@ -72,7 +72,7 @@ const getSingleUser = async (req, res) => {
     }
 
     logger.info(
-      `USER -> GET SINGLE USER (UID: ${req.user.uid}) = User fetched successfully.`,
+      `USER -> GET SINGLE USER (ID: ${req.user._id}) = User fetched successfully.`,
     );
     return res.status(200).json({
       status: 200,
@@ -82,7 +82,7 @@ const getSingleUser = async (req, res) => {
   } catch (error) {
     const errorMessage = error.message || "Internal server error";
     logger.error(
-      `USER -> GET SINGLE USER (UID: ${req.user.uid}) = Error: ${errorMessage}`,
+      `USER -> GET SINGLE USER (ID: ${req.user._id}) = Error: ${errorMessage}`,
     );
     return res.status(500).json({
       status: 500,
@@ -135,4 +135,23 @@ const getUserByEmail = async (req, res) => {
   }
 };
 
-module.exports = { getSingleUser, createUser, getUserByEmail };
+const getAllUsers = async (req, res) => {
+  try {
+    const users = await User.find();
+    return res.status(200).json({
+      status: 200,
+      success: true,
+      data: users,
+    });
+  } catch (error) {
+    const errorMessage = error.message || "Internal server error";
+    logger.error("USER -> GET ALL USERS = Error: ${errorMessage}");
+    return res.status(500).json({
+      status: 500,
+      success: false,
+      message: errorMessage,
+    });
+  }
+};
+
+module.exports = { getUser, createUser, getUserByEmail, getAllUsers };

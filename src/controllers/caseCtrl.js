@@ -6,8 +6,14 @@ const getCases = asyncHandler(async (req, res) => {
   try {
     const cases = await Case.find()
       .sort({ createdAt: -1 })
-      .populate("user", "name email")
-      .populate("assignedTo", "name email");
+      .populate({
+        path: "user",
+        select: "_id name email",
+      })
+      .populate({
+        path: "assignedTo",
+        select: "_id name email",
+      });
 
     res.status(200).json({
       success: true,
@@ -22,6 +28,7 @@ const getCases = asyncHandler(async (req, res) => {
         dnaFile: caseItem.dnaFile,
         assignedTo: caseItem.assignedTo,
         dueDate: caseItem.dueDate,
+        user: caseItem.user,
       })),
     });
   } catch (error) {
@@ -172,10 +179,46 @@ const deleteCase = asyncHandler(async (req, res) => {
   }
 });
 
+// Get cases by user ID
+const getCasesByUserId = asyncHandler(async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    const cases = await Case.find({ user: userId })
+      .sort({ createdAt: -1 })
+      .populate("user", "name email")
+      .populate("assignedTo", "name email");
+
+    res.status(200).json({
+      success: true,
+      data: cases.map((caseItem) => ({
+        id: caseItem._id,
+        title: caseItem.title,
+        description: caseItem.description,
+        priority: caseItem.priority,
+        status: caseItem.status,
+        createdAt: caseItem.createdAt,
+        tags: caseItem.tags,
+        dnaFile: caseItem.dnaFile,
+        assignedTo: caseItem.assignedTo,
+        dueDate: caseItem.dueDate,
+      })),
+    });
+  } catch (error) {
+    console.error("Error fetching cases by user:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch cases by user",
+      error: error.message,
+    });
+  }
+});
+
 module.exports = {
   getCases,
   getCaseById,
   createCase,
   updateCase,
   deleteCase,
+  getCasesByUserId,
 };
