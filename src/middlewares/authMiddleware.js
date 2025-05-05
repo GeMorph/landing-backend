@@ -1,6 +1,7 @@
 const admin = require("firebase-admin");
 const { getConfig } = require("../config/config");
 const { logger } = require("../utils/logger");
+const User = require("../models/userModel");
 
 const initFirebase = async () => {
   try {
@@ -44,21 +45,25 @@ const validateToken = async (req, res, next) => {
     const decodedToken = await admin.auth().verifyIdToken(idToken);
     logger.info("Token decoded successfully for UID:", decodedToken.uid);
 
-    req.user = decodedToken;
+    // Find user in our database
+    const user = await User.findOne({ firebase_id: decodedToken.uid });
 
-    if (req.params.id && req.user?.uid !== req.params.id) {
-      logger.info(
-        `REQUEST -> (UID: ${req.user?.uid}, PARAM ID: ${req.params.id}) = Unauthorized access.`,
-      );
+    if (!user) {
+      logger.info(`User not found in database for UID: ${decodedToken.uid}`);
       return res.status(401).json({
         status: 401,
         success: false,
-        message: "Unauthorized access.",
+        message: "User not found in database",
       });
     }
 
-    if (!req.user.uid) {
-      logger.info(`REQUEST -> (UID: ${req.user?.uid}) = Unauthorized access.`);
+    // Set the user object with the database user
+    req.user = user;
+
+    if (req.params.id && req.user._id.toString() !== req.params.id) {
+      logger.info(
+        `REQUEST -> (UID: ${req.user._id}, PARAM ID: ${req.params.id}) = Unauthorized access.`,
+      );
       return res.status(401).json({
         status: 401,
         success: false,
