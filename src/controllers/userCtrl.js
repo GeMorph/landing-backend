@@ -5,7 +5,7 @@ const { logger } = require("../utils/logger");
 const createUser = async (req, res) => {
   try {
     const { email, firstName, lastName } = req.body;
-    const firebase_id = req.user.uid; // Get Firebase UID from the verified token
+    const firebase_id = req.firebaseUser.uid; // Get Firebase UID from the verified token
 
     if (!email) {
       return res.status(400).json({
@@ -135,4 +135,4 @@ const getUserByEmail = async (req, res) => {
   }
 };
 
-module.exports = { getSingleUser, createUser, getUserByEmail};
+module.exports = { getSingleUser, createUser, getUserByEmail };

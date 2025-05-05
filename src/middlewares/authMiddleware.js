@@ -42,11 +42,33 @@ const validateToken = async (req, res, next) => {
       });
     }
 
-    const decodedToken = await admin.auth().verifyIdToken(idToken);
-    logger.info("Token decoded successfully for UID:", decodedToken.uid);
+    let decodedToken;
+    try {
+      decodedToken = await admin.auth().verifyIdToken(idToken);
+      if (!decodedToken || !decodedToken.uid) {
+        throw new Error("Invalid token structure - missing UID");
+      }
+      logger.info("Token decoded successfully for UID:", decodedToken.uid);
+    } catch (verifyError) {
+      logger.error("Error verifying token:", verifyError);
+      return res.status(403).json({
+        status: 403,
+        success: false,
+        message: "Invalid or expired token",
+        error: verifyError.message,
+      });
+    }
 
     // Find user in our database
     const user = await User.findOne({ firebase_id: decodedToken.uid });
+
+    // If user doesn't exist and this is a signup request, allow it to proceed
+    if (!user && req.path.includes("/signup")) {
+      logger.info(`New user signup for UID: ${decodedToken.uid}`);
+      // Set the Firebase UID in the request for the signup process
+      req.firebaseUser = decodedToken;
+      return next();
+    }
 
     if (!user) {
       logger.info(`User not found in database for UID: ${decodedToken.uid}`);
