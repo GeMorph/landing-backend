@@ -6,17 +6,18 @@ const {
   updateReport,
   deleteReport,
 } = require("../controllers/reportCtrl");
+const { validateToken, validateAdmin } = require("../middlewares/authMiddleware");
 
 // Get all reports
-router.get("/", getReports);
+router.get("/", validateToken, getReports);
 
 // Create a new report
-router.post("/", createReport);
+router.post("/", validateToken, validateAdmin, createReport);
 
 // Update a report
-router.put("/:id", updateReport);
+router.put("/:id", validateToken, validateAdmin, updateReport);
 
 // Delete a report
-router.delete("/:id", deleteReport);
+router.delete("/:id", validateToken, validateAdmin, deleteReport);
 
 module.exports = router;

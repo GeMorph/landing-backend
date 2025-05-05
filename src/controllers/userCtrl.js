@@ -135,4 +135,4 @@ const getUserByEmail = async (req, res) => {
   }
 };
 
-module.exports = { getSingleUser, createUser, getUserByEmail };
+module.exports = { getSingleUser, createUser, getUserByEmail};
