@@ -7,7 +7,13 @@ const getReports = asyncHandler(async (req, res) => {
   try {
     const reports = await Report.find()
       .sort({ createdAt: -1 })
-      .populate("user", "name email");
+      .populate("user", "name email")
+      .populate({
+        path: "case",
+        select: "caseNumber title user",
+        populate: { path: "user", select: "name email" },
+      })
+      .populate("createdBy", "name email");
 
     res.status(200).json({
       success: true,
@@ -19,10 +25,26 @@ const getReports = asyncHandler(async (req, res) => {
         status: report.status,
         created_at: report.createdAt,
         caseNumber: report.caseNumber,
-        user: {
-          name: report.user.name,
-          email: report.user.email,
-        },
+        case: report.case
+          ? {
+              id: report.case._id,
+              caseNumber: report.case.caseNumber,
+              title: report.case.title,
+              user: report.case.user,
+            }
+          : null,
+        user: report.user
+          ? {
+              name: report.user.name,
+              email: report.user.email,
+            }
+          : null,
+        submittedBy: report.createdBy
+          ? {
+              name: report.createdBy.name,
+              email: report.createdBy.email,
+            }
+          : null,
       })),
     });
   } catch (error) {
