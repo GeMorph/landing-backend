@@ -15,6 +15,9 @@ const {
 // Get all reports
 router.get("/", validateToken, getReports);
 
+// Get single report
+router.get("/:id", validateToken, getReportById);
+
 // Create a new report
 router.post("/", validateToken, validateAdmin, createReport);
 
@@ -23,8 +26,5 @@ router.put("/:id", validateToken, validateAdmin, updateReport);
 
 // Delete a report
 router.delete("/:id", validateToken, validateAdmin, deleteReport);
-
-// Get report by ID
-router.get("/:id", validateToken, getReportById);
 
 module.exports = router;

@@ -129,8 +129,16 @@ const createCase = asyncHandler(async (req, res) => {
 // Update a case
 const updateCase = asyncHandler(async (req, res) => {
   try {
-    const { title, description, priority, status, tags, dueDate, dnaFile } =
-      req.body;
+    const {
+      title,
+      description,
+      priority,
+      status,
+      tags,
+      dueDate,
+      dnaFile,
+      assignedTo,
+    } = req.body;
 
     const caseItem = await Case.findByIdAndUpdate(
       req.params.id,
@@ -142,9 +150,13 @@ const updateCase = asyncHandler(async (req, res) => {
         tags,
         dueDate,
         dnaFile,
+        assignedTo,
       },
       { new: true },
-    );
+    ).populate({
+      path: "assignedTo",
+      select: "_id name email",
+    });
 
     if (!caseItem) {
       return res.status(404).json({

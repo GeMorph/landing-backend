@@ -82,17 +82,6 @@ const validateToken = async (req, res, next) => {
     // Set the user object with the database user
     req.user = user;
 
-    if (req.params.id && req.user._id.toString() !== req.params.id) {
-      logger.info(
-        `REQUEST -> (UID: ${req.user._id}, PARAM ID: ${req.params.id}) = Unauthorized access.`,
-      );
-      return res.status(401).json({
-        status: 401,
-        success: false,
-        message: "Unauthorized access.",
-      });
-    }
-
     next();
   } catch (error) {
     logger.error("Error verifying ID token in middleware:", error);

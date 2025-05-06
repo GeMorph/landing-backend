@@ -8,7 +8,10 @@ const {
   deleteCase,
   getCasesByUserId,
 } = require("../controllers/caseCtrl");
-const { validateToken } = require("../middlewares/authMiddleware");
+const {
+  validateToken,
+  validateAdmin,
+} = require("../middlewares/authMiddleware");
 
 // Get all cases
 router.get("/", validateToken, getCases);
@@ -22,10 +25,10 @@ router.get("/:id", validateToken, getCaseById);
 // Create a new case
 router.post("/", validateToken, createCase);
 
-// Update a case
-router.put("/:id", validateToken, updateCase);
+// Update a case - only admin can update
+router.put("/:id", validateToken, validateAdmin, updateCase);
 
-// Delete a case
-router.delete("/:id", validateToken, deleteCase);
+// Delete a case - only admin can delete
+router.delete("/:id", validateToken, validateAdmin, deleteCase);
 
 module.exports = router;
