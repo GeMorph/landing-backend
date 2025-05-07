@@ -45,6 +45,14 @@ const caseSchema = new mongoose.Schema(
     dueDate: {
       type: Date,
     },
+    attachments: [
+      {
+        url: { type: String, required: true },
+        name: String,
+        size: Number,
+        type: String,
+      },
+    ],
     notes: [
       {
         text: String,

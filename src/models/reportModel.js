@@ -43,7 +43,10 @@ const reportSchema = new mongoose.Schema(
     },
     attachments: [
       {
-        type: String, // URLs to files
+        url: { type: String, required: true },
+        name: String,
+        size: Number,
+        type: String,
       },
     ],
     comments: [
