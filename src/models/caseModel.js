@@ -28,10 +28,7 @@ const caseSchema = new mongoose.Schema(
       required: true,
     },
     dnaFile: {
-      url: String,
-      name: String,
-      size: Number,
-      type: String,
+      type: String, // URL to the DNA file
     },
     tags: [
       {
@@ -47,10 +44,7 @@ const caseSchema = new mongoose.Schema(
     },
     attachments: [
       {
-        url: { type: String, required: true },
-        name: String,
-        size: Number,
-        type: String,
+        type: String, // URLs to files
       },
     ],
     notes: [
