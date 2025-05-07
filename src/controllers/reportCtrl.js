@@ -45,6 +45,7 @@ const getReports = asyncHandler(async (req, res) => {
               email: report.createdBy.email,
             }
           : null,
+        attachments: report.attachments || [],
       })),
     });
   } catch (error) {
@@ -173,6 +174,7 @@ const getReportById = asyncHandler(async (req, res) => {
           email: report.user.email,
         },
         caseNumber: report.caseNumber,
+        attachments: report.attachments || [],
       },
     });
   } catch (error) {
